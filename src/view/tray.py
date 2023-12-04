@@ -4,19 +4,23 @@ from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from src.config import ConfigCenter
 from src.utils import enumerate_devices
 
-icon_path = 'resources/icon.png'
+ICON_PATH = 'resources/icon.png'
 
+# 设备字典
 device_dict = enumerate_devices()
 
 
 class MyMenu(QMenu):
+    """托盘右键菜单"""
+
     def __init__(self, tray: QSystemTrayIcon, config: ConfigCenter):
         super().__init__()
         self.tray = tray
         self.config = config
 
         # 开始暂停
-        self.start_pause_action = QAction('暂停', self)
+        label = '暂停' if self.config.get('run') else '开始'
+        self.start_pause_action = QAction(label, self)
 
         # 选择设备
         self.device_action_group = QActionGroup(self)
@@ -54,11 +58,13 @@ class MyMenu(QMenu):
         self.quit_action.triggered.connect(self.handle_quit_action)
 
     def handle_start_pause_action(self):
+        """继续暂停"""
         is_running = self.config.get('run')
         self.config.set('run', not is_running)
-        self.start_pause_action.setText('暂停' if is_running else '开始')
+        self.start_pause_action.setText('暂停' if is_running else '继续')
 
     def handle_device_action(self):
+        """选择设备"""
         for action in self.device_action_group.actions():
             if action.isChecked():
                 name = action.text()
@@ -66,19 +72,23 @@ class MyMenu(QMenu):
                 break
 
     def handle_flip_action(self):
+        """镜像翻转"""
         is_flipped = self.config.get('flip')
         self.config.set('flip', not is_flipped)
         self.flip_action.setChecked(not is_flipped)
 
     def handle_quit_action(self):
+        """退出"""
         self.tray.hide()
         self.config.set('run', False)
         QApplication.instance().quit()
 
 
 class MyTray(QSystemTrayIcon):
+    """托盘"""
+
     def __init__(self, config: ConfigCenter):
         super().__init__()
-        self.setIcon(QIcon(icon_path))
+        self.setIcon(QIcon(ICON_PATH))
         self.setToolTip('pyConductor')
         self.setContextMenu(MyMenu(self, config))

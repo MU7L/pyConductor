@@ -8,17 +8,17 @@ from mediapipe.tasks.python.vision import GestureRecognizerOptions, RunningMode,
 
 from src.config import Observer, ConfigCenter
 
-model_asset_path = 'resources/gesture_recognizer.task'
+MODEL_ASSET_PATH = 'resources/gesture_recognizer.task'
 
-# TODO: 探测区域
 options = GestureRecognizerOptions(
-    base_options=BaseOptions(model_asset_path),
+    base_options=BaseOptions(MODEL_ASSET_PATH),
     running_mode=RunningMode.VIDEO,
     num_hands=1,  # 单手
 )
 
 
 def vision_task(conn, cam=0, flip_y=True):
+    """手势识别任务"""
     with GestureRecognizer.create_from_options(options) as recognizer:
         cap = cv2.VideoCapture(cam)
         while cap.isOpened():
@@ -32,10 +32,13 @@ def vision_task(conn, cam=0, flip_y=True):
             mp_image = Image(image_format=ImageFormat.SRGB, data=frame)
             result = recognizer.recognize_for_video(mp_image, frame_timestamp_ms)
             conn.send(result)
+            # TODO: 可视化
         cap.release()
 
 
 class VisionTask(Observer):
+    """手势识别任务代理类"""
+
     def __init__(self, conn, config: ConfigCenter):
         super().__init__(config)
         self.conn = conn
@@ -51,11 +54,15 @@ class VisionTask(Observer):
                 self.set_flip(value)
 
     def set_cam(self, cam):
+        if self.cam == cam:
+            return
         self.stop()
         self.cam = cam
         self.start()
 
     def set_flip(self, flip_y):
+        if self.flip_y == flip_y:
+            return
         self.stop()
         self.flip_y = flip_y
         self.start()

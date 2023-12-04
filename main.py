@@ -5,8 +5,8 @@ from threading import Event, Thread
 from PySide6.QtWidgets import QApplication
 
 from src.config import ConfigCenter
-from src.controller import Machine
-from src.utils import ResultParser
+from src.machine import Machine
+from src.result_parser import ResultParser
 from src.view.tray import MyTray
 from src.view.window import MyWindow
 from src.vision_task import VisionTask
@@ -42,14 +42,14 @@ class Application:
         self.tray = MyTray(self.config)
 
     def recv(self):
-        # 接收线程
+        """接收线程"""
         result_parser = ResultParser()
         while not self.event.is_set():
             if not self.config.get('run'):
                 continue
             result = self.right.recv()
             report = result_parser.handle(result)
-            print(report)
+            # print(report)
             self.machine.handle(report)
             self.window.handle(report)
 

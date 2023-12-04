@@ -1,19 +1,47 @@
-from math import sqrt, ceil
+import sys
 
-from PySide6.QtCore import Qt, QTimer, QPointF, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, QTimer, QPointF
 from PySide6.QtGui import QColor, QPainter, QGuiApplication, QRadialGradient
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QApplication
 
 from src.core import Report, Signal
 
-settings = {
-    'fps': 60,
-    'ring': 5,
-    'min_r': 30
-}
+FPS = 60  # 刷新率
+R = 30  # 半径
+RING = 5  # 色环宽度
+
+
+class MyGradient(QRadialGradient):
+    """自定义径向渐变"""
+
+    def __init__(self, x, y, r=R, d=RING):
+        """
+        :param x: 圆心x
+        :param y: 圆心y
+        :param r: 内径
+        :param d: 色环宽度
+        """
+        super().__init__(x, y, r + d, x, y, r)
+        self.setColorAt(0, QColor(0, 0, 0, 0))
+        self.setColorAt(1, QColor(0, 0, 0, 127))
+
+    def set_pos(self, x, y):
+        p = QPointF(x, y)
+        self.setCenter(p)
+        self.setFocalPoint(p)
+
+    def set_ring_color(self, color):
+        """
+        :param color: Qt内置颜色
+        """
+        self.setColorAt(0.5, QColor(color))
+
+    def __repr__(self):
+        return f"MyAnimatedGradient(x={self.center().x()}, y={self.center().y()}"
 
 
 class MyWindow(QWidget):
+    """主界面"""
 
     def __init__(self):
         super().__init__()
@@ -22,42 +50,24 @@ class MyWindow(QWidget):
         screen = QGuiApplication.primaryScreen().geometry()
         self.screen_width = screen.width()
         self.screen_height = screen.height()
-        self.max_r = ceil(sqrt(self.screen_width ** 2 + self.screen_height ** 2))
-        self.min_r = settings['min_r']
 
         self.is_active = False
-
-        r = settings['min_r']
-        ring = settings['ring']
-        self.gradient = QRadialGradient(0, 0, r + ring, 0, 0, r)
-        self.gradient.setColorAt(0, QColor(0, 0, 0, 0))
-        self.gradient.setColorAt(1, QColor(0, 0, 0, 127))
-
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update)
-        self.timer.start(int(1000 / settings['fps']))
-
-        # TODO: 动画
-        # self.enter_animation = QPropertyAnimation(self.gradient, b"centerRadius")
-        # self.enter_animation.setEasingCurve(QEasingCurve.InCubic)
-        # self.enter_animation.setStartValue(self.max_r)
-        # self.enter_animation.setEndValue(self.min_r)
-        # self.enter_animation.setDuration(2000)
-        #
-        # self.leave_animation = QPropertyAnimation(self, b"centerRadius")
-        # self.enter_animation.setEasingCurve(QEasingCurve.OutCubic)
-        # self.leave_animation.setStartValue(self.min_r)
-        # self.leave_animation.setEndValue(self.max_r)
-        # self.leave_animation.setDuration(2000)
+        self.gradient = MyGradient(self.screen_width / 2, self.screen_height / 2, R, RING)
+        self.set_interval()
 
     def init_ui(self):
         self.setWindowFlags(
             Qt.FramelessWindowHint  # 无边框
             | Qt.WindowStaysOnTopHint  # 置顶
             | Qt.WindowTransparentForInput  # 鼠标穿透
+            | Qt.ToolTip  # 无任务栏图标
         )
-        # 透明
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_TranslucentBackground)  # 透明
+
+    def set_interval(self):
+        timer = QTimer(self)
+        timer.timeout.connect(self.update)  # 忽略此处报错
+        timer.start(int(1000 / FPS))
 
     def paintEvent(self, event):
         if not self.is_active:
@@ -69,26 +79,27 @@ class MyWindow(QWidget):
 
     def handle(self, report: Report):
         if report.signal is Signal.NONE:
-            if self.is_active:
-                self.is_active = False
-                # self.leave_animation.start()
+            self.is_active = False
             return
 
-        if not self.is_active:
-            self.is_active = True
-            # self.enter_animation.start()
+        self.is_active = True
         x = report.x * self.screen_width
         y = report.y * self.screen_height
-        p = QPointF(x, y)
-        self.gradient.setCenter(p)
-        self.gradient.setFocalPoint(p)
+        self.gradient.set_pos(x, y)
 
         match report.signal:
-            case Signal.ONE:
-                self.gradient.setColorAt(0.5, QColor(Qt.black))
             case Signal.LEFT:
-                self.gradient.setColorAt(0.5, QColor(Qt.blue))
+                self.gradient.set_ring_color(Qt.blue)
             case Signal.GRAB:
-                self.gradient.setColorAt(0.5, QColor(Qt.green))
+                self.gradient.set_ring_color(Qt.green)
             case Signal.RIGHT:
-                self.gradient.setColorAt(0.5, QColor(Qt.red))
+                self.gradient.set_ring_color(Qt.red)
+            case _:
+                self.gradient.set_ring_color(Qt.black)
+
+
+if __name__ == '__main__':
+    app = QApplication([])
+    window = MyWindow()
+    window.show()
+    sys.exit(app.exec())
