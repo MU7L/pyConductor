@@ -1,11 +1,10 @@
-from PySide6.QtGui import QIcon, QAction, QActionGroup
+from PySide6.QtGui import QIcon, QAction, QActionGroup, QGuiApplication
 from PySide6.QtWidgets import QSystemTrayIcon, QMenu
 from cv2 import VideoCapture
 
-from GUI.app import MyApplication
 from utils.config import ConfigCenter, Observer
 
-ICON_PATH = 'resources/icon.png'
+ICON_PATH = 'resources/png/ok.png'
 
 
 # 设备字典
@@ -14,20 +13,20 @@ ICON_PATH = 'resources/icon.png'
 class MyTray(QSystemTrayIcon):
     """托盘"""
 
-    def __init__(self, app: MyApplication, config: ConfigCenter):
+    def __init__(self, config: ConfigCenter):
         super().__init__()
         self.setIcon(QIcon(ICON_PATH))
         self.setToolTip('pyConductor')
-        self.setContextMenu(MyMenu(app, config))
+        self.setContextMenu(MyMenu(self, config))
 
 
-# TODO: 继承改组合
 class MyMenu(QMenu):
     """托盘右键菜单"""
 
-    def __init__(self, app: MyApplication, config: ConfigCenter):
+    def __init__(self, tray: MyTray, config: ConfigCenter):
         super().__init__()
-        self.app = app
+        self.app = QGuiApplication.instance()
+        self.tray = tray
         self.observer = MyMenuObserver(self, config)
 
         # 开始暂停
@@ -75,13 +74,10 @@ class MyMenu(QMenu):
         is_running = self.observer.config.get('pause')
         self.observer.config.set('pause', not is_running)
 
-    def handle_device_action(self):
+    def handle_device_action(self, action):
         """选择设备"""
-        for action in self.device_action_group.actions():
-            if action.isChecked():
-                name = action.text()
-                self.observer.config.set('cam', self.device_dict[name])
-                break
+        name = action.text()
+        self.observer.config.set('cam', self.device_dict[name])
 
     def handle_flip_action(self):
         """镜像翻转"""
@@ -90,6 +86,7 @@ class MyMenu(QMenu):
 
     def handle_quit_action(self):
         """退出"""
+        self.tray.hide()
         self.app.quit()
 
 

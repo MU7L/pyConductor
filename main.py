@@ -2,7 +2,11 @@ import sys
 from multiprocessing import Pipe
 from threading import Event, Thread
 
-from GUI.app import MyApplication
+from PySide6.QtWidgets import QApplication
+
+from GUI.tray import MyTray
+from GUI.window import MyWindow
+from GUI.window2 import MyWidget
 from analyzer.analyzer import Analyzer
 from machine.machine import Machine
 from recognizer.core import TaskResult
@@ -11,13 +15,13 @@ from utils.config import ConfigCenter
 from utils.logger import logger
 
 default_settings = {
-    'run': True,
+    'pause': False,
     'cam': 0,
     'flip': True
 }
 
 
-class App:
+class Application:
     def __init__(self, settings=None):
         # 配置中心
         if settings is None:
@@ -38,10 +42,14 @@ class App:
         self.recv_thread.daemon = True
 
         # 显示模块
-        self.gui = MyApplication(self.config)
+        self.app = QApplication([])
+        self.tray = MyTray(self.config)
+        # self.window = MyWindow(self.config)
+        self.widget = MyWidget()
 
-        # 鼠标控制模块
-        self.machine = Machine(self.gui.window, self.config)
+        # 系统控制模块
+        # self.machine = Machine(self.window, self.config)
+        self.machine = Machine(self.widget, self.config)
 
     def recv(self):
         """接收线程"""
@@ -57,15 +65,17 @@ class App:
     def start(self):
         self.recognizer.start()
         self.recv_thread.start()
-        return self.gui.start()  # 阻塞
+        self.tray.show()
+        # self.window.showFullScreen()
+        self.widget.show()
+        return self.app.exec()  # 阻塞
 
     def stop(self):
         self.config.set('pause', True)
+        self.recognizer.stop()
         self.event.set()
         self.left.close()
         self.right.close()
-        self.recognizer.stop()
-        self.gui.stop()
 
     def exec(self):
         code = self.start()  # 阻塞
@@ -74,7 +84,7 @@ class App:
 
 
 def main():
-    app = App()
+    app = Application()
     return app.exec()
 
 

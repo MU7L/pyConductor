@@ -1,5 +1,6 @@
 import logging
 import os
+import datetime
 
 log_path = 'logs'
 
@@ -20,7 +21,11 @@ fh_info.setLevel(logging.INFO)
 fh_info.setFormatter(formatter)
 logger.addHandler(fh_info)
 
-fh_debug = logging.FileHandler(os.path.join(log_path, 'debug.log'))
+file_path = os.path.join(log_path, f'debug-{datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}.log')
+file = open(file_path, 'w')
+file.close()
+
+fh_debug = logging.FileHandler(file_path)
 fh_debug.setLevel(logging.DEBUG)
 fh_debug.setFormatter(formatter)
 logger.addHandler(fh_debug)

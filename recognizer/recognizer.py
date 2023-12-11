@@ -1,7 +1,5 @@
 from multiprocessing import Process
 
-import cv2
-
 from recognizer.vision_task import vision_task
 from utils.config import Observer, ConfigCenter
 from utils.logger import logger
@@ -14,7 +12,6 @@ class Recognizer(Observer):
         super().__init__(config)
         self.conn = conn
         self.cam = self.config.get('cam') or 0
-        self.cap = cv2.VideoCapture(self.cam)
         self.flip_y = self.config.get('flip') or False
         self.process = None
 
@@ -30,7 +27,6 @@ class Recognizer(Observer):
             return
         self.stop()
         self.cam = cam
-        self.cap = cv2.VideoCapture(self.cam)
         self.start()
 
     def set_flip(self, flip_y):
@@ -42,7 +38,7 @@ class Recognizer(Observer):
 
     def start(self):
         if self.process is None:
-            self.process = Process(name='Task_Vision', target=vision_task, args=(self.conn, self.cap, self.flip_y))
+            self.process = Process(name='Task_Vision', target=vision_task, args=(self.conn, self.cam, self.flip_y))
             self.process.daemon = True
         self.process.start()
         logger.info(f'Recognizer started. cam: {self.cam}, flip: {self.flip_y}')

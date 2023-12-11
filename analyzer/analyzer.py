@@ -8,13 +8,6 @@ from analyzer.core import Gesture, Report
 from analyzer.debounce import Debounce
 from analyzer.smoothen import Smoothen
 
-gesture_map = {
-    'none': Gesture.ELSE,
-    'palm': Gesture.PALM,
-    'ok': Gesture.OK,
-    'fist': Gesture.FIST,
-}
-
 
 class Analyzer:
     """ 将识别结果GestureRecognizerResult解析为Report """
@@ -28,7 +21,14 @@ class Analyzer:
         if len(result.gestures) == 0:
             return Report(Gesture.NONE, 0, 0)  # 没有检测到手
 
+        gesture_map = {
+            'none': Gesture.ELSE,
+            'palm': Gesture.PALM,
+            'ok': Gesture.OK,
+            'fist': Gesture.FIST,
+        }
         self.gesture.value = result.gestures[0][0].category_name
+        _gesture = gesture_map.get(self.gesture.value) or Gesture.ELSE
 
         landmarks = result.hand_landmarks[0]
         cursor = landmarks[5]
@@ -38,7 +38,7 @@ class Analyzer:
         xp = zoom(distance_std)
         self.x.value, self.y.value = interp([cursor.x, cursor.y], xp, [0, 1])
 
-        return Report(gesture_map[self.gesture.value], self.x.value, self.y.value)
+        return Report(_gesture, self.x.value, self.y.value)
 
 
 def distance(lm1: NormalizedLandmark, lm2: NormalizedLandmark):
@@ -55,5 +55,5 @@ def zoom(std_dis):
     :param std_dis: 标准长度
     """
     std = std_dis * 10
-    return [1 - std, std]
-    # return [0.2, 0.8]
+    # return [1 - std, std]
+    return [0.2, 0.8]
