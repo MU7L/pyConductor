@@ -5,8 +5,14 @@ from mediapipe.tasks.python.vision import GestureRecognizerResult
 from numpy import interp
 
 from analyzer.core import Gesture, Report
-from analyzer.debounce import Debounce
-from analyzer.smoothen import Smoothen
+from analyzer.handler import Debounce, Smoothen
+
+gesture_map = {
+    'none': Gesture.ELSE,
+    'palm': Gesture.PALM,
+    'ok': Gesture.OK,
+    'fist': Gesture.FIST,
+}
 
 
 class Analyzer:
@@ -21,20 +27,15 @@ class Analyzer:
         if len(result.gestures) == 0:
             return Report(Gesture.NONE, 0, 0)  # 没有检测到手
 
-        gesture_map = {
-            'none': Gesture.ELSE,
-            'palm': Gesture.PALM,
-            'ok': Gesture.OK,
-            'fist': Gesture.FIST,
-        }
+        # 手势
         self.gesture.value = result.gestures[0][0].category_name
         _gesture = gesture_map.get(self.gesture.value) or Gesture.ELSE
 
+        # 位置
         landmarks = result.hand_landmarks[0]
         cursor = landmarks[5]
         # TODO: 标准距离，目前定义为手腕到大拇指根关节距离
         distance_std = distance(landmarks[0], landmarks[1])
-
         xp = zoom(distance_std)
         self.x.value, self.y.value = interp([cursor.x, cursor.y], xp, [0, 1])
 

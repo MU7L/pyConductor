@@ -1,31 +1,34 @@
-from PySide6.QtGui import QIcon, QAction, QActionGroup, QGuiApplication
-from PySide6.QtWidgets import QSystemTrayIcon, QMenu
+from PySide6.QtGui import QAction, QActionGroup, QPixmap
+from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from cv2 import VideoCapture
 
+from settings import ICON_PATH
 from utils.config import ConfigCenter, Observer
-
-ICON_PATH = 'resources/png/ok.png'
-
-
-# 设备字典
+from utils.log import logger
 
 
 class MyTray(QSystemTrayIcon):
     """托盘"""
 
-    def __init__(self, config: ConfigCenter):
-        super().__init__()
-        self.setIcon(QIcon(ICON_PATH))
+    def __init__(self, app: QApplication, config: ConfigCenter):
+        pixmap = QPixmap(ICON_PATH)
+        super().__init__(pixmap, app)
         self.setToolTip('pyConductor')
-        self.setContextMenu(MyMenu(self, config))
+        self.setContextMenu(MyMenu(app, self, config))
+
+        self.activated.connect(self.on_activated)
+
+    def on_activated(self, reason):
+        # TODO: 处理托盘的点击事件
+        pass
 
 
 class MyMenu(QMenu):
     """托盘右键菜单"""
 
-    def __init__(self, tray: MyTray, config: ConfigCenter):
+    def __init__(self, app: QApplication, tray: MyTray, config: ConfigCenter):
         super().__init__()
-        self.app = QGuiApplication.instance()
+        self.app = app
         self.tray = tray
         self.observer = MyMenuObserver(self, config)
 
@@ -93,6 +96,7 @@ class MyMenu(QMenu):
 class MyMenuObserver(Observer):
     """托盘右键菜单观察者"""
 
+    # TODO: 是否需要绑定信号槽？
     def __init__(self, menu: MyMenu, config: ConfigCenter):
         super().__init__(config)
         self.menu = menu
@@ -111,14 +115,16 @@ class MyMenuObserver(Observer):
 
 def enumerate_devices():
     """获取所有摄像头"""
-    device_list = []
+    devices = []
     index = 0
     while True:
         cap = VideoCapture(index)
         if cap.isOpened():
-            device_list.append(index)
+            devices.append(index)
             cap.release()
             index += 1
         else:
             break
-    return {f'Camera_{i}': i for i in device_list}
+    res = {f'Camera_{i}': i for i in devices}
+    logger.info(f'Cameras: {res}')
+    return res

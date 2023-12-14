@@ -1,1 +1,6 @@
-/test.py
+data/task
+!data/task/gesture_recognizer.task
+
+logs
+
+tests

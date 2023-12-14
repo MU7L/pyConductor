@@ -11,6 +11,7 @@ connections_style = get_default_hand_connections_style()
 hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
 
 
+# TODO: 监测窗口
 def show_landmarks(frame, result: GestureRecognizerResult):
     landmarks_proto = landmark_pb2.NormalizedLandmarkList()
     if len(result.hand_landmarks) > 0:

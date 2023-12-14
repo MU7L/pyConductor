@@ -4,5 +4,4 @@ pyautogui~=0.9.54
 numpy~=1.26.2
 setuptools~=68.0.0
 pyside6~=6.6.1
-
 matplotlib~=3.8.2

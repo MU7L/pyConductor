@@ -8,5 +8,5 @@ setup(
     license='',
     author='MUJL',
     author_email='1219757241@qq.com',
-    description='control your computer with cv'
+    description='control your computer with gestures'
 )
