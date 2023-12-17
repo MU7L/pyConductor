@@ -1,7 +1,7 @@
-from enum import Enum
+import enum
 
 
-class RingStyle(Enum):
+class RingStyle(enum.Enum):
     """指示环样式"""
     DEFAULT = 0
     BLUE = 1

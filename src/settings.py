@@ -11,7 +11,7 @@ TASK_PATH = path.join(ROOT_PATH, 'data/task/gesture_recognizer.task')
 LOG_PATH = path.join(ROOT_PATH, 'logs')
 
 # config center
-init_config = {
+base_config = {
     'pause': False,  # 暂停
     'cam': 0,  # 相机编号
     'flip': True,  # 镜像

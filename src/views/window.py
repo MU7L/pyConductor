@@ -1,27 +1,29 @@
-from os import path
+import os
 
-from PySide6.QtCore import Qt, QTimeLine, QRect
-from PySide6.QtGui import QPainter, QGuiApplication, QColor, QRegion, QPixmap
+from PySide6 import QtCore
+from PySide6.QtCore import QRect, Qt
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPixmap, QRegion
 from PySide6.QtWidgets import QWidget
 
-from analyzer.core import Gesture
-from machine.machine import Machine
-from settings import RING_R, RING_D, PNG_PATH
+from core.data import Gesture
+from settings import PNG_PATH, RING_D, RING_R
+from thread.signals import Signals
 from utils.config import ConfigCenter, Observer
-from views.style import RingStyle
+from views.ring_style import RingStyle
+
 
 ICON_PATH_MAP = {
-    'eye': path.join(PNG_PATH, 'eye.png'),
-    'palm': path.join(PNG_PATH, 'palm.png'),
-    'ok': path.join(PNG_PATH, 'ok.png'),
-    'fist': path.join(PNG_PATH, 'fist.png'),
+    'eye':  os.path.join(PNG_PATH, 'eye.png'),
+    'palm': os.path.join(PNG_PATH, 'palm.png'),
+    'ok':   os.path.join(PNG_PATH, 'ok.png'),
+    'fist': os.path.join(PNG_PATH, 'fist.png'),
 }
 
 
 class MyWindow(QWidget):
     """主界面"""
 
-    def __init__(self, machine: Machine, config: ConfigCenter):
+    def __init__(self, signals: Signals, config: ConfigCenter):
         super().__init__()
         # 受config center控制
         self.observer = MyWindowObserver(self, config)
@@ -35,7 +37,7 @@ class MyWindow(QWidget):
         self.screen_height = screen.height()
 
         # 初始化信号槽
-        self.init_sig(machine)
+        self.init_sig(signals)
 
         # 显示控制
         self.setWindowOpacity(0)
@@ -48,7 +50,7 @@ class MyWindow(QWidget):
         self.ring_deg = 0
         self.ring_front_color = Qt.transparent
         self.ring_back_color = Qt.transparent
-        self.ring_timeline = QTimeLine(1000, self)
+        self.ring_timeline = QtCore.QTimeLine(1000, self)
         self.ring_timeline.setFrameRange(0, 360)
         self.ring_timeline.frameChanged.connect(self.on_frame_changed)
 
@@ -56,7 +58,7 @@ class MyWindow(QWidget):
         self.gesture_pix_map = {
             Gesture.NONE: QPixmap(ICON_PATH_MAP['eye']),
             Gesture.PALM: QPixmap(ICON_PATH_MAP['palm']),
-            Gesture.OK: QPixmap(ICON_PATH_MAP['ok']),
+            Gesture.OK:   QPixmap(ICON_PATH_MAP['ok']),
             Gesture.FIST: QPixmap(ICON_PATH_MAP['fist']),
             Gesture.ELSE: QPixmap(ICON_PATH_MAP['palm']),
         }
@@ -71,11 +73,11 @@ class MyWindow(QWidget):
         )
         self.setAttribute(Qt.WA_TranslucentBackground)  # 透明
 
-    def init_sig(self, machine: Machine):
-        machine.show_sig.connect(self.on_show_sig)
-        machine.pos_sig.connect(self.on_pos_sig)
-        machine.style_sig.connect(self.on_style_sig)
-        machine.icon_sig.connect(self.on_icon_sig)
+    def init_sig(self, signals: Signals):
+        signals.show_sig.connect(self.on_show_sig)
+        signals.pos_sig.connect(self.on_pos_sig)
+        signals.style_sig.connect(self.on_style_sig)
+        signals.icon_sig.connect(self.on_icon_sig)
 
     def paintEvent(self, event):
         painter = QPainter(self)

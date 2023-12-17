@@ -1,7 +1,7 @@
-from enum import Enum
+import enum
 
 
-class Gesture(Enum):
+class Gesture(enum.Enum):
     """手势代表信号种类"""
     NONE = 0  # 无手
     PALM = 1  # 检测到手掌表示接管控制

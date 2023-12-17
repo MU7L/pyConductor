@@ -1,21 +1,19 @@
-from PySide6.QtGui import QAction, QActionGroup, QPixmap
-from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
-from cv2 import VideoCapture
+import cv2
+from PySide6 import QtGui, QtWidgets
 
 from settings import ICON_PATH
 from utils.config import ConfigCenter, Observer
 from utils.log import logger
 
 
-class MyTray(QSystemTrayIcon):
+class MyTray(QtWidgets.QSystemTrayIcon):
     """托盘"""
 
-    def __init__(self, app: QApplication, config: ConfigCenter):
-        pixmap = QPixmap(ICON_PATH)
+    def __init__(self, app: QtWidgets.QApplication, config: ConfigCenter):
+        pixmap = QtGui.QPixmap(ICON_PATH)
         super().__init__(pixmap, app)
         self.setToolTip('pyConductor')
-        self.setContextMenu(MyMenu(app, self, config))
-
+        self.setContextMenu(MyMenu(self, config))
         self.activated.connect(self.on_activated)
 
     def on_activated(self, reason):
@@ -23,36 +21,36 @@ class MyTray(QSystemTrayIcon):
         pass
 
 
-class MyMenu(QMenu):
+class MyMenu(QtWidgets.QMenu):
     """托盘右键菜单"""
 
-    def __init__(self, app: QApplication, tray: MyTray, config: ConfigCenter):
+    def __init__(self, tray: MyTray, config: ConfigCenter):
         super().__init__()
-        self.app = app
+        self.app = tray.parent()
         self.tray = tray
         self.observer = MyMenuObserver(self, config)
 
         # 开始暂停
         label = '开始' if config.get('pause') else '暂停'
-        self.start_pause_action = QAction(label, self)
+        self.start_pause_action = QtGui.QAction(label, self)
 
         # 选择设备
         self.device_dict = enumerate_devices()
-        self.device_action_group = QActionGroup(self)
+        self.device_action_group = QtGui.QActionGroup(self)
         for name, index in self.device_dict.items():
-            device_action = QAction(name, self.device_action_group)
+            device_action = QtGui.QAction(name, self.device_action_group)
             device_action.setCheckable(True)
             if index == config.get('cam'):
                 device_action.setChecked(True)
             self.device_action_group.addAction(device_action)
 
         # 镜像翻转
-        self.flip_action = QAction('镜像翻转', self)
+        self.flip_action = QtGui.QAction('镜像翻转', self)
         self.flip_action.setCheckable(True)
         self.flip_action.setChecked(config.get('flip'))
 
         # 退出
-        self.quit_action = QAction('退出', self)
+        self.quit_action = QtGui.QAction('退出', self)
 
         self.init_ui()
         self.init_connect()
@@ -118,7 +116,7 @@ def enumerate_devices():
     devices = []
     index = 0
     while True:
-        cap = VideoCapture(index)
+        cap = cv2.VideoCapture(index)
         if cap.isOpened():
             devices.append(index)
             cap.release()

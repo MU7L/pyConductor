@@ -1,4 +1,4 @@
-from time import time
+import time
 
 from settings import DEBOUNCE_DELAY_S, SMOOTHENING
 
@@ -14,8 +14,8 @@ class Debounce:
         return self._value
 
     def setter(self, value):
-        if self.last_change is None or time() - self.last_change >= DEBOUNCE_DELAY_S:
-            self.last_change = time()
+        if self.last_change is None or time.time() - self.last_change >= DEBOUNCE_DELAY_S:
+            self.last_change = time.time()
             self._value = value
 
     value = property(getter, setter)
@@ -26,11 +26,12 @@ class Smoothen:
 
     def __init__(self, value=0):
         self._value = value
+        self.adaptation = 1
 
     def getter(self):
         return self._value
 
     def setter(self, value):
-        self._value = self._value + (value - self._value) / SMOOTHENING
+        self._value = self._value + (value - self._value) / SMOOTHENING / self.adaptation
 
     value = property(getter, setter)

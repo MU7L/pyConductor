@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QApplication
 
-from machine.machine import Machine
+from thread.signals import Signals
+from thread.worker import Worker
 from utils.config import ConfigCenter
 from views.tray import MyTray
 from views.window import MyWindow
@@ -8,15 +9,17 @@ from views.window import MyWindow
 
 def main():
     config = ConfigCenter()
+
     app = QApplication([])
-    machine = Machine(app, config)
+    signals = Signals()
+    worker = Worker(app, signals, config)
     tray = MyTray(app, config)
-    window = MyWindow(machine, config)
+    window = MyWindow(signals, config)
 
     # 运行
     tray.show()
     window.showFullScreen()
-    machine.start()
+    worker.start()
     app.exec()
 
 
