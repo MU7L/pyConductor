@@ -5,8 +5,9 @@ from jobs.analyzer import Analyzer
 from jobs.collector import Collector
 from jobs.machine import Machine
 from jobs.recognizer import Recognizer
-from thread.signals import Signals
+
 from utils.config import ConfigCenter
+from worker.signals import Signals
 
 
 class Worker(QThread):
