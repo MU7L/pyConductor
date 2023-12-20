@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import QApplication
 
-from thread.signals import Signals
-from thread.worker import Worker
+
 from utils.config import ConfigCenter
 from views.tray import MyTray
 from views.window import MyWindow
+from worker.signals import Signals
+from worker.worker import Worker
 
 
 def main():

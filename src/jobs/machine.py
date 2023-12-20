@@ -5,10 +5,11 @@ import pyautogui
 from core.data import Gesture, Report
 from core.job import Job
 from settings import ACTIVE_BOUNCE_RANGE, ACTIVE_JUDGEMENT_S, IDLE_JUDGEMENT_S
-from thread.signals import Signals
+
 from utils.config import ConfigCenter
 from utils.log import logger
 from views.ring_style import RingStyle
+from worker.signals import Signals
 
 pyautogui.FAILSAFE = False  # pyautogui 失控时跳出异常
 pyautogui.PAUSE = 0  # pyautogui 响应时间

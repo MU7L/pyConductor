@@ -1,4 +1,4 @@
-# TODO: 每次生成两份文件
+# TODO: 每次生成两份文件 -> 单例模式
 
 import datetime
 import logging

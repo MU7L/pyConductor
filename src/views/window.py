@@ -7,10 +7,10 @@ from PySide6.QtWidgets import QWidget
 
 from core.data import Gesture
 from settings import PNG_PATH, RING_D, RING_R
-from thread.signals import Signals
+
 from utils.config import ConfigCenter, Observer
 from views.ring_style import RingStyle
-
+from worker.signals import Signals
 
 ICON_PATH_MAP = {
     'eye':  os.path.join(PNG_PATH, 'eye.png'),
